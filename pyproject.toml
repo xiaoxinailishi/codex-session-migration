@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "codex-session-migration"
+version = "0.1.0"
+description = "Selected Codex chat history migration, backup/restore, user image recovery and offline sync for Windows"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+keywords = ["codex", "openai", "chat-history", "session-migration", "backup", "restore", "sqlite", "jsonl", "image-recovery", "windows"]
+classifiers = ["Programming Language :: Python :: 3", "Operating System :: Microsoft :: Windows", "Topic :: System :: Archiving :: Backup"]
+
+[project.scripts]
+codex-migrate = "codex_migrate.__main__:main"
+
+[project.urls]
+Homepage = "https://github.com/xiaoxinailishi/codex-session-migration"
+Issues = "https://github.com/xiaoxinailishi/codex-session-migration/issues"
+
+[tool.setuptools.packages.find]
+include = ["codex_migrate*"]

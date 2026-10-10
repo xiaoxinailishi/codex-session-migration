@@ -1,0 +1,38 @@
+name: Synthetic migration tests
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+        python: ['3.11', '3.12', '3.13']
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Synthetic data tests (offline check mocked)
+        run: python -m unittest discover -v
+      - name: Public content guard
+        run: python scripts/check_publication.py --tracked-only
+      - name: Command help
+        run: python -m codex_migrate --help
+      - name: PowerShell syntax (Windows)
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          $taskFailed = $false
+          Get-ChildItem scripts -Filter *.ps1 | ForEach-Object {
+            $taskTokens = $null
+            $taskErrors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile($_.FullName, [ref]$taskTokens, [ref]$taskErrors) | Out-Null
+            if ($taskErrors.Count) { $taskErrors | Write-Output; $taskFailed = $true }
+          }
+          if ($taskFailed) { exit 1 }
