@@ -6,6 +6,7 @@ Initial public version of the generalized migration workflow:
 
 - Read-only selected session export and payload scope/SHA verification.
 - Exact user image recovery from existing files or transmitted base64.
+- Canonical log-path handling for Windows short (8.3) profile paths.
 - Recipient database preparation, desktop project assignment, JSONL offset rebasing and unchanged-row checks.
 - Offline guarded application, error recovery, and manual rollback protected against later work, including WAL changes.
 - One-way refresh with previous-export baseline and recipient divergence checks.

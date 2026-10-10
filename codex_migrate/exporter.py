@@ -223,11 +223,13 @@ def _export(home, dbroot, ids, output, maps, under, baseline, choices, stack):
                     require(not p.is_symlink(), "Linked rollout")
                     require(len(owners) == 1, "Ambiguous rollout filename")
                     found[norm(p)] = (p, owners[0])
+    canonical_logs = {}
     for tid, row in threads.items():
         p = Path(row["rollout_path"].removeprefix("\\\\?\\")).resolve()
         require(p.is_relative_to(home), "Rollout is outside CODEX_HOME")
         require(not p.is_symlink(), "Linked canonical rollout")
         found[norm(p)] = (p, tid)
+        canonical_logs[tid] = p.relative_to(home).as_posix()
     snapshots = output / "snapshots"
     logs = []
     for source, tid in found.values():
@@ -246,9 +248,7 @@ def _export(home, dbroot, ids, output, maps, under, baseline, choices, stack):
     anchors = {}
     for tid, row in threads.items():
         owned = [x for x in logs if x["thread_id"] == tid]
-        canonical = next(
-            x for x in owned if norm(x["source_path"]) == norm(row["rollout_path"])
-        )
+        canonical = next(x for x in owned if x["relative"] == canonical_logs[tid])
         if canonical["offsets_align"]:
             anchors[tid] = canonical["relative"]
         else:
@@ -280,6 +280,7 @@ def _export(home, dbroot, ids, output, maps, under, baseline, choices, stack):
         "counts": counts,
         "catalog": catalog,
         "anchors": anchors,
+        "canonical_logs": canonical_logs,
         "logs": [
             {"relative": x["relative"], "thread_id": x["thread_id"]} for x in logs
         ],
@@ -376,5 +377,9 @@ def verify_package(stage):
     }
     require(actual == seen, "Unlisted payload files")
     plan = load(stage / "payload/plan.json")
+    require(
+        plan.get("format_version") == 1 and "canonical_logs" in plan,
+        "Unsupported package layout; re-export with the current tool",
+    )
     require(plan["run_id"] == manifest["run_id"], "Run ID mismatch")
     return plan

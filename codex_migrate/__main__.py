@@ -1,4 +1,4 @@
-import argparse, json, sys
+import argparse, json, sqlite3, sys
 from pathlib import Path
 from .common import MigrationError, default_home, dump, load, sqlite_root
 from . import cleanup, exporter, importer, transport
@@ -201,7 +201,7 @@ def main(argv=None):
             result = cleanup.cleanup(args.plan, args.select, args.delete_backups)
         print(json.dumps(result, ensure_ascii=False, indent=2))
         return 2 if result.get("status") == "DATA_VERIFICATION_FAILED" else 0
-    except (MigrationError, OSError, ValueError) as exc:
+    except (MigrationError, OSError, ValueError, sqlite3.Error) as exc:
         print(
             json.dumps({"status": "STOPPED", "error": str(exc)}, ensure_ascii=False),
             file=sys.stderr,

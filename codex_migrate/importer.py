@@ -408,9 +408,7 @@ def _prepare(stage, home, dbroot, image_root, stack):
                     "select * from threads where id=?", (row["id"],)
                 ).fetchone()
                 row["cwd"] = mapped(row["cwd"], plan, home)
-                relative = ntpath.relpath(
-                    row["rollout_path"].removeprefix("\\\\?\\"), plan["source_home"]
-                ).replace("\\", "/")
+                relative = plan["canonical_logs"][row["id"]]
                 row["rollout_path"] = str(safe_child(home, relative))
                 row["sandbox_policy"] = sandbox(row["sandbox_policy"], plan, home)
                 row["project_id"] = project_ids[row["id"]]
@@ -708,6 +706,8 @@ def validate_prepared(work, home, dbroot):
 
 
 def apply(work, home, dbroot):
+    home = Path(home).resolve()
+    dbroot = Path(dbroot).resolve()
     r = validate_prepared(work, home, dbroot)
     work = Path(work).resolve()
     stage = Path(r["stage"])
@@ -837,6 +837,8 @@ def restore_entries(entries):
 
 
 def rollback(backup, home, dbroot):
+    home = Path(home).resolve()
+    dbroot = Path(dbroot).resolve()
     backup = Path(backup).resolve()
     r = load(backup / "backup-manifest.json")
     require(
